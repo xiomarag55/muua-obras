@@ -219,8 +219,24 @@ export const filterService = {
     }
 };
 
+/**
+ * Servicio de Art Institute of Chicago (API externa)
+ */
+export const articService = {
+    getArtworks: async (page = 1, limit = 12) => {
+        try {
+            const response = await apiClient.get('/artworks/artic', { params: { page, limit } });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching artic artworks:', error);
+            throw error;
+        }
+    }
+};
+
 export default {
     artistService,
     artworkService,
-    filterService
+    filterService,
+    articService
 };
