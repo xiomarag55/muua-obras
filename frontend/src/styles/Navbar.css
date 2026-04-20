@@ -1,0 +1,142 @@
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 60px;
+    background: rgba(2, 105, 55, 0.96);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.navbar-logo {
+    font-size: 22px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 3px;
+}
+
+.navbar-sub {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.65);
+    letter-spacing: 1.5px;
+    font-weight: 400;
+}
+
+.navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Botón base */
+.navbar-btn {
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Login */
+.navbar-btn--login {
+    background: #fff;
+    color: var(--primary-color);
+}
+
+.navbar-btn--login:hover {
+    background: var(--accent-light);
+    color: #fff;
+}
+
+/* Agregar obra */
+.navbar-btn--upload {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+}
+
+.navbar-btn--upload:hover {
+    background: rgba(255, 255, 255, 0.28);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.btn-icon {
+    font-size: 17px;
+    line-height: 1;
+}
+
+/* Salir */
+.navbar-btn--logout {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    padding: 7px 14px;
+}
+
+.navbar-btn--logout:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 0, 0, 0.15);
+}
+
+/* Avatar de usuario */
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+}
+
+.user-avatar {
+    width: 28px;
+    height: 28px;
+    background: var(--accent-light);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.user-name {
+    font-size: 13px;
+    color: #fff;
+    font-weight: 500;
+}
+
+@media (max-width: 600px) {
+    .navbar {
+        padding: 0 16px;
+    }
+
+    .navbar-sub {
+        display: none;
+    }
+
+    .user-name {
+        display: none;
+    }
+
+    .navbar-btn--upload span:not(.btn-icon) {
+        display: none;
+    }
+}

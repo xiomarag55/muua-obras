@@ -1,31 +1,55 @@
-/**
- * Componente ArtworkCard
- * Tarjeta para mostrar información de una obra de arte
- */
-
 import React, { useState } from 'react';
 import '../styles/ArtworkCard.css';
 
-export const ArtworkCard = ({ artwork, onArtistClick }) => {
+export const ArtworkCard = ({ artwork, onArtistClick, onClick, onDelete }) => {
     const [imageError, setImageError] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
 
-    const handleImageError = () => {
-        setImageError(true);
+    const handleDeleteClick = (e) => {
+        e.stopPropagation();
+        setConfirmDelete(true);
+    };
+
+    const handleConfirm = (e) => {
+        e.stopPropagation();
+        setConfirmDelete(false);
+        onDelete(artwork.id);
+    };
+
+    const handleCancel = (e) => {
+        e.stopPropagation();
+        setConfirmDelete(false);
     };
 
     return (
-        <div className="artwork-card">
+        <div className="artwork-card" onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined}>
             <div className="artwork-image-container">
                 {!imageError ? (
                     <img
                         src={artwork.image}
                         alt={artwork.title}
                         className="artwork-image"
-                        onError={handleImageError}
+                        onError={() => setImageError(true)}
                     />
                 ) : (
                     <div className="artwork-image-placeholder">
                         <span>Imagen no disponible</span>
+                    </div>
+                )}
+
+                {onDelete && (
+                    <div className="artwork-card-actions">
+                        {confirmDelete ? (
+                            <div className="delete-confirm" onClick={e => e.stopPropagation()}>
+                                <span>¿Eliminar?</span>
+                                <button className="btn-confirm-yes" onClick={handleConfirm}>Sí</button>
+                                <button className="btn-confirm-no" onClick={handleCancel}>No</button>
+                            </div>
+                        ) : (
+                            <button className="btn-delete" onClick={handleDeleteClick} title="Eliminar obra">
+                                🗑
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
@@ -37,7 +61,7 @@ export const ArtworkCard = ({ artwork, onArtistClick }) => {
                     <strong>Artista:</strong>
                     <span
                         className="artist-link"
-                        onClick={() => onArtistClick && onArtistClick(artwork.artistId)}
+                        onClick={(e) => { e.stopPropagation(); onArtistClick && onArtistClick(artwork.artistId); }}
                     >
                         {artwork.artist?.name || 'Artista desconocido'}
                     </span>

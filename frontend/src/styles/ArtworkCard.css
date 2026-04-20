@@ -26,6 +26,79 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+}
+
+.artwork-card-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+}
+
+.btn-delete {
+    background: rgba(0, 0, 0, 0.55);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 16px;
+    padding: 6px 8px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, background 0.2s;
+    line-height: 1;
+}
+
+.artwork-card:hover .btn-delete {
+    opacity: 1;
+}
+
+.btn-delete:hover {
+    background: rgba(200, 30, 30, 0.85);
+}
+
+.delete-confirm {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.75);
+    border-radius: 6px;
+    padding: 6px 10px;
+    backdrop-filter: blur(4px);
+}
+
+.delete-confirm span {
+    font-size: 12px;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.btn-confirm-yes,
+.btn-confirm-no {
+    border: none;
+    border-radius: 4px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-confirm-yes {
+    background: #e74c3c;
+    color: #fff;
+}
+
+.btn-confirm-yes:hover {
+    background: #c0392b;
+}
+
+.btn-confirm-no {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+}
+
+.btn-confirm-no:hover {
+    background: rgba(255,255,255,0.35);
 }
 
 .artwork-image {

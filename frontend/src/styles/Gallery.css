@@ -68,9 +68,84 @@
 .gallery-controls {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 30px 20px;
+    padding: 20px 20px 10px;
     background-color: var(--bg-white);
     border-bottom: 1px solid var(--border-color);
+}
+
+.gallery-controls-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.gallery-controls-top > *:first-child {
+    flex: 1;
+    min-width: 200px;
+}
+
+.auth-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.auth-user {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.btn-login {
+    padding: 9px 18px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.btn-login:hover {
+    background: var(--secondary-color);
+}
+
+.btn-upload {
+    padding: 9px 18px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.btn-upload:hover {
+    background: var(--secondary-color);
+}
+
+.btn-logout {
+    padding: 9px 18px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-logout:hover {
+    border-color: #e74c3c;
+    color: #e74c3c;
 }
 
 .view-switcher {

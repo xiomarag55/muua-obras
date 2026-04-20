@@ -13,6 +13,8 @@ public interface ArtistRepository extends JpaRepository<Artist, Long> {
 
     List<Artist> findByNameContainingIgnoreCaseOrBioContainingIgnoreCase(String name, String bio);
 
+    java.util.Optional<Artist> findByNameIgnoreCase(String name);
+
     List<Artist> findByRegionIgnoreCase(String region);
 
     List<Artist> findByTechniqueIgnoreCase(String technique);

@@ -1,5 +1,6 @@
 package com.muua.gallery.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +30,7 @@ public class Artist {
     private String bio;
     private String image;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "artist", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Artwork> artworks;
 

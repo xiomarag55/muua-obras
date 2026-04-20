@@ -1,6 +1,9 @@
 package com.muua.gallery.service;
 
+import com.muua.gallery.dto.ArtworkCreateDTO;
+import com.muua.gallery.entity.Artist;
 import com.muua.gallery.entity.Artwork;
+import com.muua.gallery.repository.ArtistRepository;
 import com.muua.gallery.repository.ArtworkRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import java.util.Optional;
 public class ArtworkService {
 
     private final ArtworkRepository artworkRepository;
+    private final ArtistRepository artistRepository;
 
     public List<Artwork> getAllArtworks() {
         return artworkRepository.findAll();
@@ -62,6 +66,33 @@ public class ArtworkService {
 
     public List<Integer> getDistinctYears() {
         return artworkRepository.findDistinctYears();
+    }
+
+    @Transactional
+    public void deleteArtwork(Long id) {
+        artworkRepository.deleteById(id);
+    }
+
+    @Transactional
+    public Artwork createArtwork(ArtworkCreateDTO dto) {
+        Artist artist = artistRepository.findByNameIgnoreCase(dto.getArtistName())
+                .orElseGet(() -> artistRepository.save(
+                        Artist.builder()
+                                .name(dto.getArtistName())
+                                .build()
+                ));
+
+        Artwork artwork = Artwork.builder()
+                .title(dto.getTitle())
+                .artist(artist)
+                .technique(dto.getTechnique())
+                .dimensions(dto.getDimensions())
+                .year(dto.getYear())
+                .description(dto.getDescription())
+                .image(dto.getImage())
+                .build();
+
+        return artworkRepository.save(artwork);
     }
 
 }

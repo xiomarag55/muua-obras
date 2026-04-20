@@ -167,6 +167,21 @@ export const artworkService = {
             console.error('Error filtering artworks by year range:', error);
             throw error;
         }
+    },
+
+    // Crear obra (requiere token)
+    create: async (artworkData, token) => {
+        const response = await apiClient.post('/artworks', artworkData, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    },
+
+    // Eliminar obra (requiere token)
+    delete: async (id, token) => {
+        await apiClient.delete(`/artworks/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
     }
 };
 
@@ -220,6 +235,20 @@ export const filterService = {
 };
 
 /**
+ * Servicio de Autenticación
+ */
+export const authService = {
+    register: async (username, password) => {
+        const response = await apiClient.post('/auth/register', { username, password });
+        return response.data;
+    },
+    login: async (username, password) => {
+        const response = await apiClient.post('/auth/login', { username, password });
+        return response.data;
+    },
+};
+
+/**
  * Servicio de Art Institute of Chicago (API externa)
  */
 export const articService = {
@@ -238,5 +267,6 @@ export default {
     artistService,
     artworkService,
     filterService,
-    articService
+    articService,
+    authService
 };

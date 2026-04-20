@@ -1,8 +1,10 @@
 package com.muua.gallery.controller;
 
+import com.muua.gallery.dto.ArtworkCreateDTO;
 import com.muua.gallery.entity.Artwork;
 import com.muua.gallery.service.ArtworkService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,6 +61,18 @@ public class ArtworkController {
             @RequestParam(required = false) Integer endYear) {
         List<Artwork> artworks = artworkService.filterByYearRange(startYear, endYear);
         return ResponseEntity.ok(artworks);
+    }
+
+    @PostMapping
+    public ResponseEntity<Artwork> createArtwork(@RequestBody ArtworkCreateDTO dto) {
+        Artwork artwork = artworkService.createArtwork(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(artwork);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteArtwork(@PathVariable Long id) {
+        artworkService.deleteArtwork(id);
+        return ResponseEntity.noContent().build();
     }
 
 }
