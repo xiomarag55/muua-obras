@@ -1,0 +1,161 @@
+# Git Ignore - MUUA Gallery Project
+
+# === Environment Variables ===
+.env
+.env.local
+.env.*.local
+.env.prod
+
+# === Node / NPM ===
+node_modules/
+npm-debug.log
+npm-error.log
+yarn-error.log
+yarn.lock
+package-lock.json
+dist/
+build/
+
+# === Java / Maven ===
+target/
+*.jar
+*.war
+*.class
+.m2/
+.mvn/
+*.iml
+*.iws
+*.ipr
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+.sublime-project
+.sublime-workspace
+
+# === Docker ===
+.docker/
+docker-compose.override.yml
+.dockerignore
+
+# === Build & Dist ===
+dist/
+build/
+out/
+*.log
+
+# === Testing ===
+coverage/
+.nyc_output/
+.jest-cache
+.testcontainers.properties
+
+# === OS Specific ===
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN
+
+# === IDE Specific ===
+# VSCode
+.vscode/
+*.code-workspace
+
+# JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime
+*.sublime-workspace
+*.sublime-project
+
+# === Temporary Files ===
+*.tmp
+*.bak
+*.swp
+~*.doc
+*.orig
+
+# === Local Development ===
+local/
+tmp/
+temp/
+*.sqlite
+*.db
+
+# === Docker Volumes (local) ===
+postgres_data/
+mysql_data/
+
+# === Backup Files ===
+*.sql
+backup.sql
+backup_*.sql
+*.tar
+*.tar.gz
+*.zip
+
+# === Logs ===
+logs/
+*.log
+
+# === System Files ===
+.vscode-settings/
+.vs/
+bin/
+obj/
+
+# === Production Files (keep source) ===
+*.env.production
+secret.txt
+
+# === Node/Maven Files to Ignore ===
+lerna-debug.log*
+.cache/
+.eslintcache
+
+# === Environment specific ===
+.env.development
+.env.test
+.env.staging
+
+# === CI/CD ===
+.github/workflows/*secret*
+.gitlab-ci.yml
+.circleci/config.yml
+
+# === macOS ===
+.DS_Store
+.AppleDouble
+.LSOverride
+*.swp
+*.swo
+
+# === Windows ===
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN
+
+# === Linux ===
+*~
+.directory
+
+# === IDE Caches ===
+.cache/
+*.cache
+.eslintcache
+.prettierignore
+
+# === Misc ===
+.history/
+*.pid
+*.seed
+*.pid.lock

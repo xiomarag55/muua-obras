@@ -1,0 +1,8 @@
+/**
+ * Estilos del componente App
+ */
+
+.app {
+    min-height: 100vh;
+    background-color: var(--bg-light);
+}
