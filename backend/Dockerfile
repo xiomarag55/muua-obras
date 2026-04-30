@@ -36,7 +36,11 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:8080/api/artists || exit 1
 
 # Run application
-ENTRYPOINT ["java", "-jar", "app.jar", \
-  "--spring.datasource.url=jdbc:postgresql://postgres:5432/muua_db", \
-  "--spring.datasource.username=postgres", \
-  "--spring.datasource.password=postgres"]
+# Shell form para que $JAVA_OPTS del docker-compose sea recogido correctamente.
+# Las credenciales de BD vienen como env vars (SPRING_DATASOURCE_URL, etc.)
+# -Dserver.tomcat.max-http-form-post-size=-1  → sin límite de POST en Tomcat
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS \
+  -Dserver.tomcat.max-http-form-post-size=-1 \
+  -Dspring.servlet.multipart.max-file-size=500MB \
+  -Dspring.servlet.multipart.max-request-size=500MB \
+  -jar app.jar"]
