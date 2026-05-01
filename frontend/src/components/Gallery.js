@@ -5,12 +5,39 @@ import ArtworkCard from './ArtworkCard';
 import ArtistCard from './ArtistCard';
 import DemoBanner from './DemoBanner';
 import ArtworkDetailModal from './ArtworkDetailModal';
-import { demoArtists, filterOptions, getEnrichedArtworks } from '../data/demoData';
-import { artworkService, articService } from '../services/apiService';
+import InventarioExcel from './InventarioExcel';
+import { demoArtists, filterOptions as demoFilterOptions, getEnrichedArtworks } from '../data/demoData';
+import { artworkService, articService, excelService, filterService } from '../services/apiService';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Gallery.css';
 
-export const Gallery = ({ onUploaded: _onUploaded }) => {
+const mapBackendArtwork = (a) => ({
+    id: a.id,
+    title: a.title,
+    artist: a.artist,
+    artistId: a.artist?.id,
+    technique: a.technique,
+    dimensions: a.dimensions,
+    year: a.year,
+    description: a.description,
+    image: a.image,
+});
+
+const mapInventarioArtwork = (item) => ({
+    id: `excel-${item.id}`,
+    title: item.titulo || 'Sin título',
+    artist: {
+        name: [item.nombre, item.apellido].filter(Boolean).join(' ') || 'Artista desconocido',
+    },
+    technique: item.tecnica || '—',
+    dimensions: item.dimensiones || '—',
+    year: item.fechaObra || item.anioIngreso || '—',
+    description: item.observaciones || item.tema || '',
+    image: item.fotoUrl || excelService.getFotoUrl(item.id),
+    isExcel: true,
+});
+
+export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUploaded }) => {
     const { isLoggedIn, token } = useAuth();
     const [view, setView] = useState('artworks');
     const [searchQuery, setSearchQuery] = useState('');
@@ -24,6 +51,45 @@ export const Gallery = ({ onUploaded: _onUploaded }) => {
     const [localArtworks, setLocalArtworks] = useState([]);
     const [artworksLoaded, setArtworksLoaded] = useState(false);
 
+    // Opciones de filtro dinámicas (backend + demo fallback)
+    const [dynamicFilters, setDynamicFilters] = useState(demoFilterOptions);
+
+    useEffect(() => {
+        filterService.getFilterOptions()
+            .then(data => {
+                if (data) {
+                    setDynamicFilters({
+                        techniques: data.techniques || demoFilterOptions.techniques,
+                        regions: data.regions || demoFilterOptions.regions,
+                        years: (data.years || demoFilterOptions.years).map(String),
+                    });
+                }
+            })
+            .catch(() => { /* usa demoFilterOptions como fallback */ });
+    }, []);
+
+    // Inventario Excel
+    const [inventario, setInventario] = useState([]);
+    const [inventarioLoading, setInventarioLoading] = useState(false);
+    const [inventarioError, setInventarioError] = useState(null);
+
+    const loadInventario = useCallback(async () => {
+        setInventarioLoading(true);
+        setInventarioError(null);
+        try {
+            const data = await excelService.getAll();
+            setInventario(Array.isArray(data) ? data : []);
+        } catch {
+            setInventarioError('No se pudo cargar el inventario. Verifica que el backend esté corriendo.');
+        } finally {
+            setInventarioLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (view === 'inventario') loadInventario();
+    }, [view, loadInventario]);
+
     // Paginación Art Institute
     const [articPage, setArticPage] = useState(1);
     const [articLimit] = useState(12);
@@ -31,15 +97,31 @@ export const Gallery = ({ onUploaded: _onUploaded }) => {
     const [articArtworks, setArticArtworks] = useState([]);
     const [articError, setArticError] = useState(null);
 
-    // Carga obras del backend; si falla usa demo data
+    // Carga obras del backend + inventario Excel; si el backend falla usa demo data
     const loadLocalArtworks = useCallback(async () => {
         try {
-            const data = await artworkService.getAll();
-            if (Array.isArray(data) && data.length > 0) {
-                setLocalArtworks(data.map(mapBackendArtwork));
-            } else {
-                setLocalArtworks(getEnrichedArtworks());
+            const [artworkResult, excelResult] = await Promise.allSettled([
+                artworkService.getAll(),
+                excelService.getAll(),
+            ]);
+
+            const base =
+                artworkResult.status === 'fulfilled' &&
+                Array.isArray(artworkResult.value) &&
+                artworkResult.value.length > 0
+                    ? artworkResult.value.map(mapBackendArtwork)
+                    : getEnrichedArtworks();
+
+            const excelArtworks =
+                excelResult.status === 'fulfilled' && Array.isArray(excelResult.value)
+                    ? excelResult.value.map(mapInventarioArtwork)
+                    : [];
+
+            if (excelResult.status === 'fulfilled' && Array.isArray(excelResult.value)) {
+                setInventario(excelResult.value);
             }
+
+            setLocalArtworks([...base, ...excelArtworks]);
         } catch {
             setLocalArtworks(getEnrichedArtworks());
         } finally {
@@ -51,18 +133,6 @@ export const Gallery = ({ onUploaded: _onUploaded }) => {
         loadLocalArtworks();
     }, [loadLocalArtworks]);
 
-    const mapBackendArtwork = (a) => ({
-        id: a.id,
-        title: a.title,
-        artist: a.artist,
-        artistId: a.artist?.id,
-        technique: a.technique,
-        dimensions: a.dimensions,
-        year: a.year,
-        description: a.description,
-        image: a.image,
-    });
-
     // Expone función para que Navbar pueda notificar nueva obra subida
     const handleUploaded = useCallback((newArtwork) => {
         setLocalArtworks(prev => [mapBackendArtwork(newArtwork), ...prev]);
@@ -73,6 +143,17 @@ export const Gallery = ({ onUploaded: _onUploaded }) => {
     useEffect(() => {
         if (_onUploaded) _onUploaded(handleUploaded);
     }, [_onUploaded, handleUploaded]);
+
+    // Expone refresh de inventario Excel para App.js → Navbar
+    const handleExcelUploaded = useCallback(() => {
+        setView('inventario');
+        loadInventario();
+        loadLocalArtworks(); // refresca también la pestaña Obras
+    }, [loadInventario, loadLocalArtworks]);
+
+    useEffect(() => {
+        if (_onExcelUploaded) _onExcelUploaded(handleExcelUploaded);
+    }, [_onExcelUploaded, handleExcelUploaded]);
 
     // Art Institute
     const loadArticArtworks = useCallback(async (page) => {
@@ -183,7 +264,7 @@ export const Gallery = ({ onUploaded: _onUploaded }) => {
             <DemoBanner />
 
             <div className="gallery-header">
-                <h1>Galería de Arte</h1>
+                <h1>Colección de artes visuales</h1>
                 <p>Museo de la Universidad de Antioquia</p>
             </div>
 
@@ -202,24 +283,39 @@ export const Gallery = ({ onUploaded: _onUploaded }) => {
                     <button className={`view-btn ${view === 'artic' ? 'active' : ''}`} onClick={() => handleViewChange('artic')}>
                         Art Institute
                     </button>
+                    <button className={`view-btn ${view === 'inventario' ? 'active' : ''}`} onClick={() => handleViewChange('inventario')}>
+                        Inventario {inventario.length > 0 ? `(${inventario.length})` : ''}
+                    </button>
                 </div>
             </div>
 
             <div className="gallery-content">
-                {view !== 'artic' && (
+                {view !== 'artic' && view !== 'inventario' && (
                     <div className="gallery-sidebar">
                         <FilterPanel
                             filters={filters}
                             onFilterChange={setFilters}
-                            techniques={filterOptions.techniques}
-                            regions={filterOptions.regions}
-                            years={filterOptions.years}
+                            techniques={dynamicFilters.techniques}
+                            regions={dynamicFilters.regions}
+                            years={dynamicFilters.years}
                         />
                     </div>
                 )}
 
-                <div className={`gallery-main ${view === 'artic' ? 'gallery-main--full' : ''}`}>
-                    {view === 'artic' ? (
+                <div className={`gallery-main ${view === 'artic' || view === 'inventario' ? 'gallery-main--full' : ''}`}>
+                    {view === 'inventario' ? (
+                        <>
+                            <div className="artic-header">
+                                <h2>Inventario MUUA</h2>
+                                <p className="artic-total">Obras cargadas desde Excel</p>
+                            </div>
+                            <InventarioExcel
+                                obras={inventario}
+                                loading={inventarioLoading}
+                                error={inventarioError}
+                            />
+                        </>
+                    ) : view === 'artic' ? (
                         <>
                             <div className="artic-header">
                                 <h2>Art Institute of Chicago</h2>
@@ -284,7 +380,7 @@ export const Gallery = ({ onUploaded: _onUploaded }) => {
                                                         artwork={artwork}
                                                         onArtistClick={(id) => { setView('artworks'); setSelectedArtist(id); }}
                                                         onClick={() => setSelectedArtwork(artwork)}
-                                                        onDelete={isLoggedIn ? handleDelete : undefined}
+                                                        onDelete={isLoggedIn && !artwork.isExcel ? handleDelete : undefined}
                                                     />
                                                 ))
                                                 : filteredData.map(artist => (

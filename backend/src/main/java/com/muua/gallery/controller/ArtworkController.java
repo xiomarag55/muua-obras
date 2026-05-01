@@ -75,4 +75,10 @@ public class ArtworkController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping()
+    public ResponseEntity<Void> deleteAll() {
+        artworkService.deleteAll();
+        return ResponseEntity.noContent().build();
+    }
+
 }

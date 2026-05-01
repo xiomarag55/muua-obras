@@ -100,7 +100,7 @@ export const FilterPanel = ({
                     className="filter-section-title"
                     onClick={() => toggleSection('region')}
                 >
-                    <span>Región</span>
+                    <span>Procedencia</span>
                     {expandedSections.region ? <FiChevronUp /> : <FiChevronDown />}
                 </button>
                 {expandedSections.region && (

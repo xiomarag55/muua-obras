@@ -35,7 +35,7 @@ export const ArtistCard = ({ artist, artworkCount = 0, onClick }) => {
 
                 <div className="artist-details">
                     <div className="detail-item">
-                        <strong>Región:</strong>
+                        <strong>Procedencia:</strong>
                         <span>{artist.region}</span>
                     </div>
                     <div className="detail-item">

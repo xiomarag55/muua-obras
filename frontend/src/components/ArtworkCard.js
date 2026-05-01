@@ -24,7 +24,7 @@ export const ArtworkCard = ({ artwork, onArtistClick, onClick, onDelete }) => {
     return (
         <div className="artwork-card" onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined}>
             <div className="artwork-image-container">
-                {!imageError ? (
+                {artwork.image && !imageError ? (
                     <img
                         src={artwork.image}
                         alt={artwork.title}

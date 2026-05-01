@@ -123,6 +123,30 @@ html {
     animation: fadeIn 0.3s ease-in-out;
 }
 
+/* ── Tema oscuro ──────────────────────────────────────────── */
+[data-theme="dark"] {
+    --bg-light: #111827;
+    --bg-white: #1f2937;
+    --text-primary: #e5e7eb;
+    --text-secondary: #9ca3af;
+    --border-color: #374151;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] body {
+    background-color: var(--bg-light);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--bg-light);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     :root {

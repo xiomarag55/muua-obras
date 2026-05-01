@@ -40,6 +40,26 @@
     font-weight: 500;
 }
 
+/* ── Tema oscuro ─────────────────────────────────────────── */
+
+[data-theme="dark"] .demo-banner {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .demo-badge {
+    background: rgba(99, 102, 241, 0.22);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    color: #c7d2fe;
+}
+
+[data-theme="dark"] .demo-text {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+
 @media (max-width: 768px) {
     .demo-banner-content {
         flex-direction: column;

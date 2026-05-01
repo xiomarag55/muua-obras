@@ -73,6 +73,10 @@ public class ArtworkService {
         artworkRepository.deleteById(id);
     }
 
+    public void deleteAll() {
+        artworkRepository.deleteAll();
+    }
+
     @Transactional
     public Artwork createArtwork(ArtworkCreateDTO dto) {
         Artist artist = artistRepository.findByNameIgnoreCase(dto.getArtistName())

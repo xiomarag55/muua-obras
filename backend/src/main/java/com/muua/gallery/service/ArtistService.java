@@ -49,6 +49,7 @@ public class ArtistService {
         return artistRepository.findDistinctRegions();
     }
 
+
     public List<String> getDistinctTechniques() {
         return artistRepository.findDistinctTechniques();
     }

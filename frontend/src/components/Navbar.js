@@ -2,24 +2,31 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import LoginModal from './LoginModal';
 import UploadArtworkModal from './UploadArtworkModal';
+import UploadExcelModal from './UploadExcelModal';
+import SettingsModal from './SettingsModal';
 import '../styles/Navbar.css';
 
-export const Navbar = ({ onUploaded }) => {
+export const Navbar = ({ onUploaded, onExcelUploaded }) => {
     const { isLoggedIn, user, logout } = useAuth();
     const [showLogin, setShowLogin] = useState(false);
     const [showUpload, setShowUpload] = useState(false);
+    const [showExcel, setShowExcel] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
 
     return (
         <>
             <nav className="navbar">
                 <div className="navbar-brand">
                     <span className="navbar-logo">MUUA</span>
-                    <span className="navbar-sub">Galería Virtual</span>
+                    <span className="navbar-sub">Colección de artes visuales</span>
                 </div>
 
                 <div className="navbar-actions">
                     {isLoggedIn ? (
                         <>
+                            <button className="navbar-btn navbar-btn--excel" onClick={() => setShowExcel(true)}>
+                                Cargar inventario
+                            </button>
                             <button className="navbar-btn navbar-btn--upload" onClick={() => setShowUpload(true)}>
                                 <span className="btn-icon">+</span> Agregar obra
                             </button>
@@ -36,6 +43,14 @@ export const Navbar = ({ onUploaded }) => {
                             Iniciar sesión
                         </button>
                     )}
+                    <button
+                        className="navbar-btn navbar-btn--settings"
+                        onClick={() => setShowSettings(true)}
+                        aria-label="Configuración"
+                        title="Configuración"
+                    >
+                        ⚙
+                    </button>
                 </div>
             </nav>
 
@@ -46,6 +61,13 @@ export const Navbar = ({ onUploaded }) => {
                     onUploaded={(obra) => { onUploaded(obra); setShowUpload(false); }}
                 />
             )}
+            {showExcel && (
+                <UploadExcelModal
+                    onClose={() => setShowExcel(false)}
+                    onUploaded={() => { setShowExcel(false); if (onExcelUploaded) onExcelUploaded(); }}
+                />
+            )}
+            {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
         </>
     );
 };

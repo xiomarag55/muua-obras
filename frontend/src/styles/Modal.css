@@ -266,6 +266,76 @@
     line-height: 1.7;
 }
 
+/* ===== Excel Upload ===== */
+.excel-drop-zone {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.excel-drop-zone:hover {
+    border-color: var(--accent-color);
+    background: var(--bg-light);
+}
+
+.excel-icon {
+    font-size: 36px;
+}
+
+.excel-filename {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    word-break: break-all;
+}
+
+.excel-filesize {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.excel-drop-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.excel-drop-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.form-success {
+    font-size: 13px;
+    color: #27ae60;
+    background: #eafaf1;
+    border: 1px solid #a9dfbf;
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+/* Spinner de carga reutilizable */
+.spinner {
+    width: 22px;
+    height: 22px;
+    border: 3px solid #d0e4ff;
+    border-top-color: #1a5fb4;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 700px) {
     .detail-layout {

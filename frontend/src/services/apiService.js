@@ -263,10 +263,34 @@ export const articService = {
     }
 };
 
+/**
+ * Servicio de carga de inventario Excel
+ */
+export const excelService = {
+    upload: async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await apiClient.post('/excel/upload', formData, {
+            headers: { 'Content-Type': undefined },
+        });
+        return response.data; // { jobId, mensaje, statusUrl }
+    },
+    getBatchStatus: async (jobId) => {
+        const response = await apiClient.get(`/excel/batch/status/${jobId}`);
+        return response.data;
+    },
+    getAll: async () => {
+        const response = await apiClient.get('/excel');
+        return response.data;
+    },
+    getFotoUrl: (id) => `${API_BASE_URL}/excel/${id}/foto`,
+};
+
 export default {
     artistService,
     artworkService,
     filterService,
     articService,
-    authService
+    authService,
+    excelService,
 };

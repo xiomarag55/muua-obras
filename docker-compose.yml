@@ -37,9 +37,11 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-muua_db}
       SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SERVER_PORT: 8080
-      JAVA_OPTS: -Xmx512m -Xms256m
+      # JAVA_OPTS se inyecta en el ENTRYPOINT shell-form del Dockerfile
+      # 1.5g de heap: suficiente para el SAX reader + 4 workers de Cloudinary
+      JAVA_OPTS: "-Xms256m -Xmx1536m"
     ports:
       - "8080:8080"
     depends_on:

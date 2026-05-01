@@ -6,10 +6,13 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 32px;
-    height: 60px;
-    background: rgba(2, 105, 55, 0.96);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+    height: 64px;
+    background: linear-gradient(135deg, rgba(2, 105, 55, 0.97) 0%, rgba(35, 148, 75, 0.95) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06), 0 4px 20px rgba(0, 0, 0, 0.25);
+    transition: background 0.35s ease, box-shadow 0.35s ease;
 }
 
 .navbar-brand {
@@ -27,7 +30,7 @@
 
 .navbar-sub {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.65);
+    color: rgba(255, 255, 255, 0.6);
     letter-spacing: 1.5px;
     font-weight: 400;
 }
@@ -35,13 +38,13 @@
 .navbar-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 /* Botón base */
 .navbar-btn {
-    padding: 8px 18px;
-    border-radius: 6px;
+    padding: 7px 16px;
+    border-radius: 8px;
     border: none;
     cursor: pointer;
     font-size: 13px;
@@ -50,48 +53,63 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    letter-spacing: 0.2px;
 }
 
 /* Login */
 .navbar-btn--login {
-    background: #fff;
+    background: rgba(255, 255, 255, 0.95);
     color: var(--primary-color);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 
 .navbar-btn--login:hover {
-    background: var(--accent-light);
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+}
+
+/* Cargar inventario */
+.navbar-btn--excel {
+    background: rgba(255, 255, 255, 0.15);
     color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.navbar-btn--excel:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.55);
 }
 
 /* Agregar obra */
 .navbar-btn--upload {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.12);
     color: #fff;
-    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.28);
 }
 
 .navbar-btn--upload:hover {
-    background: rgba(255, 255, 255, 0.28);
-    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.55);
 }
 
 .btn-icon {
-    font-size: 17px;
+    font-size: 16px;
     line-height: 1;
 }
 
 /* Salir */
 .navbar-btn--logout {
     background: transparent;
-    color: rgba(255, 255, 255, 0.7);
-    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 7px 14px;
 }
 
 .navbar-btn--logout:hover {
     color: #fff;
-    border-color: rgba(255, 255, 255, 0.6);
-    background: rgba(255, 0, 0, 0.15);
+    border-color: rgba(255, 80, 80, 0.6);
+    background: rgba(255, 60, 60, 0.15);
 }
 
 /* Avatar de usuario */
@@ -99,8 +117,9 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 4px 10px;
+    padding: 4px 12px 4px 5px;
     background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 20px;
 }
 
@@ -122,6 +141,91 @@
     color: #fff;
     font-weight: 500;
 }
+
+/* Configuración */
+.navbar-btn--settings {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    font-size: 16px;
+    padding: 7px 11px;
+    line-height: 1;
+    border-radius: 8px;
+}
+
+.navbar-btn--settings:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ── Tema oscuro ─────────────────────────────────────────────────────────── */
+
+[data-theme="dark"] .navbar {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .navbar-btn--login {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: none;
+}
+
+[data-theme="dark"] .navbar-btn--login:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+[data-theme="dark"] .navbar-btn--excel {
+    background: rgba(99, 102, 241, 0.2);
+    color: #c7d2fe;
+    border-color: rgba(99, 102, 241, 0.35);
+}
+
+[data-theme="dark"] .navbar-btn--excel:hover {
+    background: rgba(99, 102, 241, 0.32);
+    border-color: rgba(99, 102, 241, 0.6);
+    color: #e0e7ff;
+}
+
+[data-theme="dark"] .navbar-btn--upload {
+    background: rgba(99, 102, 241, 0.15);
+    color: #c7d2fe;
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+[data-theme="dark"] .navbar-btn--upload:hover {
+    background: rgba(99, 102, 241, 0.28);
+    border-color: rgba(99, 102, 241, 0.55);
+    color: #e0e7ff;
+}
+
+[data-theme="dark"] .navbar-btn--settings {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.65);
+}
+
+[data-theme="dark"] .navbar-btn--settings:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+[data-theme="dark"] .navbar-user {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .user-avatar {
+    background: #4f46e5;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
 
 @media (max-width: 600px) {
     .navbar {
