@@ -452,6 +452,34 @@ public class ExcelService {
         return "deleted";
     }
 
+    public void deleteById(Long id) {
+        repository.deleteById(id);
+    }
+
+    public ArtWorkExcel update(Long id, ArtWorkExcel updated) {
+        ArtWorkExcel existing = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Obra no encontrada: " + id));
+        existing.setCodigo(updated.getCodigo());
+        existing.setApellido(updated.getApellido());
+        existing.setNombre(updated.getNombre());
+        existing.setTitulo(updated.getTitulo());
+        existing.setTecnica(updated.getTecnica());
+        existing.setFechaObra(updated.getFechaObra());
+        existing.setDimensiones(updated.getDimensiones());
+        existing.setFormato(updated.getFormato());
+        existing.setTema(updated.getTema());
+        existing.setProcedencia(updated.getProcedencia());
+        existing.setAvaluoComercial(updated.getAvaluoComercial());
+        existing.setEstadoConservacion(updated.getEstadoConservacion());
+        existing.setObservaciones(updated.getObservaciones());
+        existing.setUbicacionPermanente(updated.getUbicacionPermanente());
+        existing.setUbicacionTemporal(updated.getUbicacionTemporal());
+        existing.setResponsable(updated.getResponsable());
+        existing.setMesIngreso(updated.getMesIngreso());
+        existing.setAnioIngreso(updated.getAnioIngreso());
+        return repository.save(existing);
+    }
+
     public List<ArtWorkExcel> findAll() {
         return repository.findAll();
     }

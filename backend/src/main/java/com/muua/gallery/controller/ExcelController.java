@@ -63,6 +63,17 @@ public class ExcelController {
         return ResponseEntity.ok(message);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteById(@PathVariable Long id) {
+        excelService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ArtWorkExcel> update(@PathVariable Long id, @RequestBody ArtWorkExcel updated) {
+        return ResponseEntity.ok(excelService.update(id, updated));
+    }
+
     /**
      * Para registros nuevos (Cloudinary) redirige a la URL pública.
      * Para registros legacy (bytes en BD) devuelve la imagen directamente.

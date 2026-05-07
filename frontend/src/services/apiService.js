@@ -284,6 +284,17 @@ export const excelService = {
         return response.data;
     },
     getFotoUrl: (id) => `${API_BASE_URL}/excel/${id}/foto`,
+    deleteById: async (id, token) => {
+        await apiClient.delete(`/excel/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+    },
+    update: async (id, data, token) => {
+        const response = await apiClient.put(`/excel/${id}`, data, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.data;
+    },
 };
 
 export default {

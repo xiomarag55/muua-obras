@@ -1,41 +1,46 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import SearchBar from './SearchBar';
 import FilterPanel from './FilterPanel';
 import ArtworkCard from './ArtworkCard';
 import ArtistCard from './ArtistCard';
-import DemoBanner from './DemoBanner';
 import ArtworkDetailModal from './ArtworkDetailModal';
 import InventarioExcel from './InventarioExcel';
-import { demoArtists, filterOptions as demoFilterOptions, getEnrichedArtworks } from '../data/demoData';
+import { filterOptions as demoFilterOptions, getEnrichedArtworks } from '../data/demoData';
 import { artworkService, articService, excelService, filterService } from '../services/apiService';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Gallery.css';
+
+const cleanStr = (s) => (s || '').trim().replace(/\.+$/, '').trim();
 
 const mapBackendArtwork = (a) => ({
     id: a.id,
     title: a.title,
     artist: a.artist,
     artistId: a.artist?.id,
-    technique: a.technique,
+    technique: cleanStr(a.technique),
     dimensions: a.dimensions,
     year: a.year,
     description: a.description,
     image: a.image,
 });
 
-const mapInventarioArtwork = (item) => ({
-    id: `excel-${item.id}`,
-    title: item.titulo || 'Sin título',
-    artist: {
-        name: [item.nombre, item.apellido].filter(Boolean).join(' ') || 'Artista desconocido',
-    },
-    technique: item.tecnica || '—',
-    dimensions: item.dimensiones || '—',
-    year: item.fechaObra || item.anioIngreso || '—',
-    description: item.observaciones || item.tema || '',
-    image: item.fotoUrl || excelService.getFotoUrl(item.id),
-    isExcel: true,
-});
+const mapInventarioArtwork = (item) => {
+    const artistName = [item.nombre, item.apellido].filter(Boolean).join(' ') || 'Artista desconocido';
+    return {
+        id: `excel-${item.id}`,
+        title: item.titulo || 'Sin título',
+        artist: { name: artistName },
+        artistId: `name-${artistName}`,
+        technique: cleanStr(item.tecnica) || '—',
+        dimensions: item.dimensiones || '—',
+        year: item.fechaObra || item.anioIngreso || '—',
+        description: item.observaciones || item.tema || '',
+        image: item.fotoUrl || excelService.getFotoUrl(item.id),
+        isExcel: true,
+    };
+};
+
+const ARTWORKS_PER_PAGE = 12;
 
 export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUploaded }) => {
     const { isLoggedIn, token } = useAuth();
@@ -46,10 +51,28 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
     const [selectedArtist, setSelectedArtist] = useState(null);
     const [loading, setLoading] = useState(false);
     const [selectedArtwork, setSelectedArtwork] = useState(null);
+    const [artworksPage, setArtworksPage] = useState(1);
 
     // Obras de la pestaña "Obras" (backend + fallback demo)
     const [localArtworks, setLocalArtworks] = useState([]);
     const [artworksLoaded, setArtworksLoaded] = useState(false);
+
+    const derivedArtists = useMemo(() => {
+        const map = new Map();
+        localArtworks.forEach(a => {
+            const key = a.artistId != null ? String(a.artistId) : null;
+            if (!key || map.has(key)) return;
+            map.set(key, {
+                id: a.artistId,
+                name: a.artist?.name || 'Artista desconocido',
+                technique: a.technique !== '—' ? a.technique : '',
+                region: a.artist?.region || '',
+                bio: a.artist?.bio || '',
+                image: a.artist?.image || null,
+            });
+        });
+        return [...map.values()];
+    }, [localArtworks]);
 
     // Opciones de filtro dinámicas (backend + demo fallback)
     const [dynamicFilters, setDynamicFilters] = useState(demoFilterOptions);
@@ -59,14 +82,25 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
             .then(data => {
                 if (data) {
                     setDynamicFilters({
-                        techniques: data.techniques || demoFilterOptions.techniques,
-                        regions: data.regions || demoFilterOptions.regions,
+                        techniques: (data.techniques || demoFilterOptions.techniques).map(cleanStr).filter(Boolean),
+                        regions: (data.regions || demoFilterOptions.regions).map(cleanStr).filter(Boolean),
                         years: (data.years || demoFilterOptions.years).map(String),
                     });
                 }
             })
             .catch(() => { /* usa demoFilterOptions como fallback */ });
     }, []);
+
+    useEffect(() => {
+        if (!artworksLoaded) return;
+        const extraYears = [...new Set(
+            localArtworks.map(a => a.year).filter(y => y && y !== '—')
+        )];
+        setDynamicFilters(prev => ({
+            ...prev,
+            years: [...new Set([...prev.years, ...extraYears.map(String)])].sort(),
+        }));
+    }, [localArtworks, artworksLoaded]);
 
     // Inventario Excel
     const [inventario, setInventario] = useState([]);
@@ -195,17 +229,18 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
                 if (view === 'artworks') {
                     result = filterArtworks(localArtworks, searchQuery, filters, selectedArtist);
                 } else {
-                    result = filterArtists(demoArtists, searchQuery, filters);
+                    result = filterArtists(derivedArtists, searchQuery, filters);
                 }
                 if (!Array.isArray(result)) result = [];
             } catch {
                 result = [];
             }
             setFilteredData(result);
+            setArtworksPage(1);
             setLoading(false);
         }, 250);
         return () => clearTimeout(timer);
-    }, [searchQuery, filters, view, selectedArtist, localArtworks, artworksLoaded]);
+    }, [searchQuery, filters, view, selectedArtist, localArtworks, artworksLoaded, derivedArtists]);
 
     const filterArtworks = (artworks, query, filters, artistId) =>
         artworks.filter(a => {
@@ -226,10 +261,10 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
         artists.filter(a => {
             if (query) {
                 const t = query.toLowerCase();
-                if (!(a.name.toLowerCase().includes(t) ||
-                    a.region.toLowerCase().includes(t) ||
-                    a.technique.toLowerCase().includes(t) ||
-                    a.bio.toLowerCase().includes(t))) return false;
+                if (!((a.name || '').toLowerCase().includes(t) ||
+                    (a.region || '').toLowerCase().includes(t) ||
+                    (a.technique || '').toLowerCase().includes(t) ||
+                    (a.bio || '').toLowerCase().includes(t))) return false;
             }
             if (filters.region?.length && !filters.region.includes(a.region)) return false;
             if (filters.technique?.length && !filters.technique.includes(a.technique)) return false;
@@ -237,11 +272,12 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
         });
 
     const getArtworkCountForArtist = (artistId) =>
-        localArtworks.filter(a => a.artistId === artistId).length;
+        localArtworks.filter(a => String(a.artistId) === String(artistId)).length;
 
     const handleViewChange = (newView) => {
         setView(newView);
         setSelectedArtist(null);
+        setArtworksPage(1);
         if (newView === 'artic') setArticPage(1);
     };
 
@@ -259,10 +295,33 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
         }
     }, [token]);
 
+    const handleExcelDelete = useCallback(async (id) => {
+        try {
+            await excelService.deleteById(id, token);
+            setInventario(prev => prev.filter(o => o.id !== id));
+            setLocalArtworks(prev => prev.filter(a => a.id !== `excel-${id}`));
+        } catch {
+            alert('No se pudo eliminar la obra del inventario.');
+        }
+    }, [token]);
+
+    const handleExcelUpdate = useCallback((updated) => {
+        setInventario(prev => prev.map(o => o.id === updated.id ? updated : o));
+        setLocalArtworks(prev => prev.map(a =>
+            a.id === `excel-${updated.id}` ? mapInventarioArtwork(updated) : a
+        ));
+    }, []);
+
+    // Redirigir fuera del inventario si el usuario cierra sesión
+    useEffect(() => {
+        if (!isLoggedIn && view === 'inventario') setView('artworks');
+    }, [isLoggedIn, view]);
+
+    const artworksTotalPages = Math.ceil(filteredData.length / ARTWORKS_PER_PAGE);
+    const pagedArtworks = filteredData.slice((artworksPage - 1) * ARTWORKS_PER_PAGE, artworksPage * ARTWORKS_PER_PAGE);
+
     return (
         <div className="gallery-container">
-            <DemoBanner />
-
             <div className="gallery-header">
                 <h1>Colección de artes visuales</h1>
                 <p>Museo de la Universidad de Antioquia</p>
@@ -278,14 +337,16 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
                         Obras ({localArtworks.length})
                     </button>
                     <button className={`view-btn ${view === 'artists' ? 'active' : ''}`} onClick={() => handleViewChange('artists')}>
-                        Artistas ({demoArtists.length})
+                        Artistas ({derivedArtists.length})
                     </button>
                     <button className={`view-btn ${view === 'artic' ? 'active' : ''}`} onClick={() => handleViewChange('artic')}>
                         Art Institute
                     </button>
-                    <button className={`view-btn ${view === 'inventario' ? 'active' : ''}`} onClick={() => handleViewChange('inventario')}>
-                        Inventario {inventario.length > 0 ? `(${inventario.length})` : ''}
-                    </button>
+                    {isLoggedIn && (
+                        <button className={`view-btn ${view === 'inventario' ? 'active' : ''}`} onClick={() => handleViewChange('inventario')}>
+                            Inventario {inventario.length > 0 ? `(${inventario.length})` : ''}
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -313,6 +374,9 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
                                 obras={inventario}
                                 loading={inventarioLoading}
                                 error={inventarioError}
+                                token={token}
+                                onDelete={handleExcelDelete}
+                                onUpdate={handleExcelUpdate}
                             />
                         </>
                     ) : view === 'artic' ? (
@@ -356,7 +420,7 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
                             {selectedArtist && (
                                 <div className="artist-detail-header">
                                     <button className="back-btn" onClick={() => setSelectedArtist(null)}>← Volver</button>
-                                    <h2>Obras de {demoArtists.find(a => a.id === selectedArtist)?.name}</h2>
+                                    <h2>Obras de {derivedArtists.find(a => String(a.id) === String(selectedArtist))?.name}</h2>
                                 </div>
                             )}
 
@@ -372,27 +436,42 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
                                             <p>No se encontraron resultados.</p>
                                         </div>
                                     ) : (
-                                        <div className={`gallery-grid ${view}`}>
-                                            {view === 'artworks'
-                                                ? filteredData.map(artwork => (
-                                                    <ArtworkCard
-                                                        key={artwork.id}
-                                                        artwork={artwork}
-                                                        onArtistClick={(id) => { setView('artworks'); setSelectedArtist(id); }}
-                                                        onClick={() => setSelectedArtwork(artwork)}
-                                                        onDelete={isLoggedIn && !artwork.isExcel ? handleDelete : undefined}
-                                                    />
-                                                ))
-                                                : filteredData.map(artist => (
-                                                    <ArtistCard
-                                                        key={artist.id}
-                                                        artist={artist}
-                                                        artworkCount={getArtworkCountForArtist(artist.id)}
-                                                        onClick={() => { setView('artworks'); setSelectedArtist(artist.id); }}
-                                                    />
-                                                ))
-                                            }
-                                        </div>
+                                        <>
+                                            <div className={`gallery-grid ${view}`}>
+                                                {view === 'artworks'
+                                                    ? pagedArtworks.map(artwork => (
+                                                        <ArtworkCard
+                                                            key={artwork.id}
+                                                            artwork={artwork}
+                                                            onArtistClick={(id) => { setView('artworks'); setSelectedArtist(id); }}
+                                                            onClick={() => setSelectedArtwork(artwork)}
+                                                            onDelete={isLoggedIn && !artwork.isExcel ? handleDelete : undefined}
+                                                        />
+                                                    ))
+                                                    : pagedArtworks.map(artist => (
+                                                        <ArtistCard
+                                                            key={artist.id}
+                                                            artist={artist}
+                                                            artworkCount={getArtworkCountForArtist(artist.id)}
+                                                            onClick={() => { setView('artworks'); setSelectedArtist(artist.id); }}
+                                                        />
+                                                    ))
+                                                }
+                                            </div>
+                                            {artworksTotalPages > 1 && (
+                                                <div className="pagination">
+                                                    <button className="pagination-btn" onClick={() => { setArtworksPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} disabled={artworksPage <= 1}>
+                                                        ← Anterior
+                                                    </button>
+                                                    <span className="pagination-info">
+                                                        Página {artworksPage} de {artworksTotalPages}
+                                                    </span>
+                                                    <button className="pagination-btn" onClick={() => { setArtworksPage(p => Math.min(artworksTotalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} disabled={artworksPage >= artworksTotalPages}>
+                                                        Siguiente →
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                 </>
                             )}

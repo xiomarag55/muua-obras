@@ -1,58 +1,40 @@
-/**
- * Componente ArtistCard
- * Tarjeta para mostrar información de un artista
- */
-
-import React, { useState } from 'react';
+import React from 'react';
 import '../styles/ArtistCard.css';
 
-export const ArtistCard = ({ artist, artworkCount = 0, onClick }) => {
-    const [imageError, setImageError] = useState(false);
+const getInitials = (name) =>
+    (name || '?').split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
-    const handleImageError = () => {
-        setImageError(true);
-    };
+export const ArtistCard = ({ artist, artworkCount = 0, onClick }) => {
+    const initials = getInitials(artist.name);
+    const hasTechnique = artist.technique && artist.technique !== '—' && artist.technique !== '';
+    const hasRegion = artist.region && artist.region !== '—' && artist.region !== '';
 
     return (
         <div className="artist-card" onClick={onClick}>
-            <div className="artist-image-container">
-                {!imageError ? (
-                    <img
-                        src={artist.image}
-                        alt={artist.name}
-                        className="artist-image"
-                        onError={handleImageError}
-                    />
-                ) : (
-                    <div className="artist-image-placeholder">
-                        <span>{artist.name.charAt(0)}</span>
-                    </div>
-                )}
+            <div className="artist-avatar-section">
+                <div className="artist-avatar">{initials}</div>
             </div>
 
             <div className="artist-info">
                 <h3 className="artist-name">{artist.name}</h3>
 
-                <div className="artist-details">
-                    <div className="detail-item">
-                        <strong>Procedencia:</strong>
-                        <span>{artist.region}</span>
+                {(hasTechnique || hasRegion) && (
+                    <div className="artist-tags">
+                        {hasTechnique && <span className="artist-tag">{artist.technique}</span>}
+                        {hasRegion && <span className="artist-tag artist-tag--region">{artist.region}</span>}
                     </div>
-                    <div className="detail-item">
-                        <strong>Técnica:</strong>
-                        <span>{artist.technique}</span>
-                    </div>
-                    {artworkCount > 0 && (
-                        <div className="detail-item">
-                            <strong>Obras:</strong>
-                            <span>{artworkCount}</span>
-                        </div>
-                    )}
-                </div>
-
-                {artist.bio && (
-                    <p className="artist-bio">{artist.bio}</p>
                 )}
+
+                {artworkCount > 0 && (
+                    <div className="artist-works-count">
+                        <span className="artist-works-num">{artworkCount}</span>
+                        <span className="artist-works-label">obra{artworkCount !== 1 ? 's' : ''}</span>
+                    </div>
+                )}
+
+                {artist.bio && <p className="artist-bio">{artist.bio}</p>}
+
+                <div className="artist-view-link">Ver obras →</div>
             </div>
         </div>
     );
