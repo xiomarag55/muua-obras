@@ -1,28 +1,38 @@
-/**
- * Estilos del ArtworkCard
- */
-
 .artwork-card {
-    background-color: var(--bg-white);
-    border-radius: 8px;
+    background: var(--surface-elevated);
+    border-radius: var(--radius-md);
     overflow: hidden;
+    border: 1px solid var(--border-color);
     box-shadow: var(--shadow);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition:
+        transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.3s ease,
+        border-color 0.25s ease;
     display: flex;
     flex-direction: column;
     height: 100%;
 }
 
+.artwork-card:focus-visible {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(58, 168, 74, 0.25), var(--shadow-lg);
+}
+
 .artwork-card:hover {
-    transform: translateY(-8px);
+    transform: translateY(-6px);
     box-shadow: var(--shadow-lg);
+    border-color: rgba(58, 168, 74, 0.28);
 }
 
 .artwork-image-container {
     width: 100%;
-    height: 250px;
+    aspect-ratio: 4 / 3;
+    max-height: 280px;
     overflow: hidden;
-    background-color: var(--bg-light);
+    background:
+        radial-gradient(circle at 30% 20%, rgba(58, 168, 74, 0.08), transparent),
+        linear-gradient(160deg, var(--bg-light), var(--surface-elevated));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -31,40 +41,41 @@
 
 .artwork-card-actions {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: 10px;
+    right: 10px;
     z-index: 2;
 }
 
 .btn-delete {
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(15, 23, 42, 0.55);
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
     color: #fff;
-    font-size: 16px;
-    padding: 6px 8px;
+    font-size: 15px;
+    padding: 7px 10px;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.2s, background 0.2s;
-    line-height: 1;
+    transition: opacity 0.2s ease, background 0.2s ease, transform 0.15s ease;
 }
 
-.artwork-card:hover .btn-delete {
+.artwork-card:hover .btn-delete,
+.artwork-card:focus-within .btn-delete {
     opacity: 1;
 }
 
 .btn-delete:hover {
-    background: rgba(200, 30, 30, 0.85);
+    background: rgba(200, 30, 30, 0.88);
+    transform: scale(1.06);
 }
 
 .delete-confirm {
     display: flex;
     align-items: center;
-    gap: 6px;
-    background: rgba(0, 0, 0, 0.75);
-    border-radius: 6px;
-    padding: 6px 10px;
-    backdrop-filter: blur(4px);
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.82);
+    border-radius: 10px;
+    padding: 8px 12px;
+    backdrop-filter: blur(8px);
 }
 
 .delete-confirm span {
@@ -76,10 +87,11 @@
 .btn-confirm-yes,
 .btn-confirm-no {
     border: none;
-    border-radius: 4px;
-    padding: 3px 10px;
+    border-radius: 6px;
+    padding: 4px 10px;
     font-size: 12px;
     font-weight: 600;
+    font-family: inherit;
     cursor: pointer;
 }
 
@@ -93,56 +105,55 @@
 }
 
 .btn-confirm-no {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.15);
     color: #fff;
-}
-
-.btn-confirm-no:hover {
-    background: rgba(255,255,255,0.35);
 }
 
 .artwork-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .artwork-card:hover .artwork-image {
-    transform: scale(1.05);
+    transform: scale(1.06);
 }
 
 .artwork-image-placeholder {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, var(--bg-light), var(--border-color));
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: 500;
 }
 
 .artwork-info {
-    padding: 16px;
+    padding: 18px;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+    gap: 4px;
 }
 
 .artwork-title {
-    font-size: 16px;
+    font-family: var(--font-display);
+    font-size: 17px;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 10px;
-    line-height: 1.4;
+    margin: 0 0 12px;
+    line-height: 1.35;
 }
 
 .artwork-artist {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 12px;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 14px;
     font-size: 13px;
 }
 
@@ -152,23 +163,36 @@
 }
 
 .artist-link {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    text-align: left;
     color: var(--accent-color);
     cursor: pointer;
-    font-weight: 500;
-    transition: color 0.3s ease;
+    font-weight: 600;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    transition: color 0.2s ease;
 }
 
 .artist-link:hover {
-    color: var(--accent-color);
     text-decoration: underline;
+    color: var(--secondary-color);
 }
 
 .artwork-details {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding-top: 4px;
     margin-bottom: 12px;
     flex-grow: 1;
+}
+
+.detail-item:last-child {
+    grid-column: 1 / -1;
 }
 
 .detail-item {
@@ -181,6 +205,9 @@
 .detail-item strong {
     color: var(--text-secondary);
     font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
 }
 
 .detail-item span {
@@ -188,31 +215,38 @@
 }
 
 .artwork-description {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
-    line-height: 1.5;
+    line-height: 1.55;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    margin-top: auto;
+    margin: auto 0 0;
 }
 
 @media (max-width: 768px) {
-    .artwork-image-container {
-        height: 200px;
+    .artwork-details {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-item:last-child {
+        grid-column: 1;
     }
 
     .artwork-info {
-        padding: 12px;
+        padding: 14px;
     }
 
     .artwork-title {
-        font-size: 14px;
-        margin-bottom: 8px;
+        font-size: 15px;
     }
+}
 
-    .detail-item {
-        font-size: 11px;
-    }
+[data-theme="dark"] .artist-link {
+    color: #4ade80;
+}
+
+[data-theme="dark"] .artist-link:hover {
+    color: #86efac;
 }

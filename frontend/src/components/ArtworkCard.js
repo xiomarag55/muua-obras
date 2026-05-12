@@ -21,8 +21,23 @@ export const ArtworkCard = ({ artwork, onArtistClick, onClick, onDelete }) => {
         setConfirmDelete(false);
     };
 
+    const handleKeyActivate = (e) => {
+        if (!onClick) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick(e);
+        }
+    };
+
     return (
-        <div className="artwork-card" onClick={onClick} style={onClick ? { cursor: 'pointer' } : undefined}>
+        <article
+            className="artwork-card"
+            onClick={onClick}
+            onKeyDown={handleKeyActivate}
+            tabIndex={onClick ? 0 : undefined}
+            aria-label={onClick ? `Ver detalle: ${artwork.title}` : undefined}
+            style={onClick ? { cursor: 'pointer' } : undefined}
+        >
             <div className="artwork-image-container">
                 {artwork.image && !imageError ? (
                     <img
@@ -40,13 +55,13 @@ export const ArtworkCard = ({ artwork, onArtistClick, onClick, onDelete }) => {
                 {onDelete && (
                     <div className="artwork-card-actions">
                         {confirmDelete ? (
-                            <div className="delete-confirm" onClick={e => e.stopPropagation()}>
+                            <div className="delete-confirm" onClick={e => e.stopPropagation()} onKeyDown={e => e.stopPropagation()} role="group" aria-label="Confirmar eliminación">
                                 <span>¿Eliminar?</span>
-                                <button className="btn-confirm-yes" onClick={handleConfirm}>Sí</button>
-                                <button className="btn-confirm-no" onClick={handleCancel}>No</button>
+                                <button type="button" className="btn-confirm-yes" onClick={handleConfirm}>Sí</button>
+                                <button type="button" className="btn-confirm-no" onClick={handleCancel}>No</button>
                             </div>
                         ) : (
-                            <button className="btn-delete" onClick={handleDeleteClick} title="Eliminar obra">
+                            <button type="button" className="btn-delete" onClick={handleDeleteClick} title="Eliminar obra" aria-label="Eliminar obra">
                                 🗑
                             </button>
                         )}
@@ -59,12 +74,13 @@ export const ArtworkCard = ({ artwork, onArtistClick, onClick, onDelete }) => {
 
                 <div className="artwork-artist">
                     <strong>Artista:</strong>
-                    <span
+                    <button
+                        type="button"
                         className="artist-link"
                         onClick={(e) => { e.stopPropagation(); onArtistClick && onArtistClick(artwork.artistId); }}
                     >
                         {artwork.artist?.name || 'Artista desconocido'}
-                    </span>
+                    </button>
                 </div>
 
                 <div className="artwork-details">
@@ -86,7 +102,7 @@ export const ArtworkCard = ({ artwork, onArtistClick, onClick, onDelete }) => {
                     <p className="artwork-description">{artwork.description}</p>
                 )}
             </div>
-        </div>
+        </article>
     );
 };
 

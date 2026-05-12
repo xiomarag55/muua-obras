@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { FiSearch } from 'react-icons/fi';
+import { FiSearch, FiX } from 'react-icons/fi';
 import '../styles/SearchBar.css';
 
 export const SearchBar = ({ onSearch, placeholder = "Buscar artistas u obras..." }) => {
@@ -23,21 +23,24 @@ export const SearchBar = ({ onSearch, placeholder = "Buscar artistas u obras..."
 
     return (
         <div className="search-bar-container">
-            <div className="search-bar">
-                <FiSearch className="search-icon" />
+            <label className="search-bar" htmlFor="gallery-search">
+                <FiSearch className="search-icon" aria-hidden />
                 <input
-                    type="text"
+                    id="gallery-search"
+                    type="search"
                     placeholder={placeholder}
                     value={query}
                     onChange={handleChange}
                     className="search-input"
+                    autoComplete="off"
+                    aria-label={placeholder}
                 />
                 {query && (
-                    <button onClick={handleClear} className="search-clear">
-                        ✕
+                    <button type="button" onClick={handleClear} className="search-clear" aria-label="Limpiar búsqueda">
+                        <FiX size={18} aria-hidden />
                     </button>
                 )}
-            </div>
+            </label>
         </div>
     );
 };

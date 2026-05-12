@@ -9,9 +9,24 @@ export const ArtistCard = ({ artist, artworkCount = 0, onClick }) => {
     const hasTechnique = artist.technique && artist.technique !== '—' && artist.technique !== '';
     const hasRegion = artist.region && artist.region !== '—' && artist.region !== '';
 
+    const handleKey = (e) => {
+        if (!onClick) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick(e);
+        }
+    };
+
     return (
-        <div className="artist-card" onClick={onClick}>
-            <div className="artist-avatar-section">
+        <article
+            className="artist-card"
+            onClick={onClick}
+            onKeyDown={handleKey}
+            tabIndex={0}
+            role="button"
+            aria-label={`Artista ${artist.name}, ver sus obras`}
+        >
+            <div className="artist-avatar-section" aria-hidden>
                 <div className="artist-avatar">{initials}</div>
             </div>
 
@@ -34,9 +49,9 @@ export const ArtistCard = ({ artist, artworkCount = 0, onClick }) => {
 
                 {artist.bio && <p className="artist-bio">{artist.bio}</p>}
 
-                <div className="artist-view-link">Ver obras →</div>
+                <span className="artist-view-link">Ver obras →</span>
             </div>
-        </div>
+        </article>
     );
 };
 

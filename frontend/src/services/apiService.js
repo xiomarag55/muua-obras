@@ -169,6 +169,12 @@ export const artworkService = {
         }
     },
 
+    // Obtener obras paginadas (Spring Page response)
+    getPaged: async ({ page = 0, size = 80 } = {}) => {
+        const response = await apiClient.get('/artworks/paged', { params: { page, size } });
+        return response.data;
+    },
+
     // Crear obra (requiere token)
     create: async (artworkData, token) => {
         const response = await apiClient.post('/artworks', artworkData, {

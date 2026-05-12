@@ -8,6 +8,7 @@ import InventarioExcel from './InventarioExcel';
 import { filterOptions as demoFilterOptions, getEnrichedArtworks } from '../data/demoData';
 import { artworkService, articService, excelService, filterService } from '../services/apiService';
 import { useAuth } from '../context/AuthContext';
+import { USE_DEMO_FALLBACK } from '../config/env';
 import '../styles/Gallery.css';
 
 const cleanStr = (s) => (s || '').trim().replace(/\.+$/, '').trim();
@@ -41,6 +42,7 @@ const mapInventarioArtwork = (item) => {
 };
 
 const ARTWORKS_PER_PAGE = 12;
+const MUSEUM_PAGE_SIZE = 80;
 
 export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUploaded }) => {
     const { isLoggedIn, token } = useAuth();
@@ -53,7 +55,6 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
     const [selectedArtwork, setSelectedArtwork] = useState(null);
     const [artworksPage, setArtworksPage] = useState(1);
 
-    // Obras de la pestaña "Obras" (backend + fallback demo)
     const [localArtworks, setLocalArtworks] = useState([]);
     const [artworksLoaded, setArtworksLoaded] = useState(false);
 
@@ -74,7 +75,6 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
         return [...map.values()];
     }, [localArtworks]);
 
-    // Opciones de filtro dinámicas (backend + demo fallback)
     const [dynamicFilters, setDynamicFilters] = useState(demoFilterOptions);
 
     useEffect(() => {
@@ -82,13 +82,17 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
             .then(data => {
                 if (data) {
                     setDynamicFilters({
-                        techniques: (data.techniques || demoFilterOptions.techniques).map(cleanStr).filter(Boolean),
-                        regions: (data.regions || demoFilterOptions.regions).map(cleanStr).filter(Boolean),
-                        years: (data.years || demoFilterOptions.years).map(String),
+                        techniques: (data.techniques?.length ? data.techniques : demoFilterOptions.techniques)
+                            .map(cleanStr)
+                            .filter(Boolean),
+                        regions: (data.regions?.length ? data.regions : demoFilterOptions.regions)
+                            .map(cleanStr)
+                            .filter(Boolean),
+                        years: (data.years?.length ? data.years : demoFilterOptions.years).map(String),
                     });
                 }
             })
-            .catch(() => { /* usa demoFilterOptions como fallback */ });
+            .catch(() => { /* demoFilterOptions */ });
     }, []);
 
     useEffect(() => {
@@ -102,10 +106,13 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
         }));
     }, [localArtworks, artworksLoaded]);
 
-    // Inventario Excel
     const [inventario, setInventario] = useState([]);
     const [inventarioLoading, setInventarioLoading] = useState(false);
     const [inventarioError, setInventarioError] = useState(null);
+
+    const [museumLoadProgress, setMuseumLoadProgress] = useState(null);
+    const [collectionError, setCollectionError] = useState(null);
+    const [collectionNotice, setCollectionNotice] = useState(null);
 
     const loadInventario = useCallback(async () => {
         setInventarioLoading(true);
@@ -124,41 +131,94 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
         if (view === 'inventario') loadInventario();
     }, [view, loadInventario]);
 
-    // Paginación Art Institute
     const [articPage, setArticPage] = useState(1);
     const [articLimit] = useState(12);
     const [articPagination, setArticPagination] = useState(null);
     const [articArtworks, setArticArtworks] = useState([]);
     const [articError, setArticError] = useState(null);
 
-    // Carga obras del backend + inventario Excel; si el backend falla usa demo data
     const loadLocalArtworks = useCallback(async () => {
-        try {
-            const [artworkResult, excelResult] = await Promise.allSettled([
-                artworkService.getAll(),
-                excelService.getAll(),
-            ]);
+        setCollectionError(null);
+        setCollectionNotice(null);
+        setMuseumLoadProgress({ loaded: 0, total: null });
 
-            const base =
-                artworkResult.status === 'fulfilled' &&
-                Array.isArray(artworkResult.value) &&
-                artworkResult.value.length > 0
-                    ? artworkResult.value.map(mapBackendArtwork)
-                    : getEnrichedArtworks();
+        const MAX_PAGES = 400;
+
+        const fetchMuseumPaged = async () => {
+            const aggregated = [];
+            let page = 0;
+            let last = false;
+            let totalElements = null;
+            while (!last && page < MAX_PAGES) {
+                const data = await artworkService.getPaged({ page, size: MUSEUM_PAGE_SIZE });
+                if (!data || !Array.isArray(data.content)) {
+                    throw new Error('Invalid paged response');
+                }
+                if (totalElements === null) {
+                    totalElements = data.totalElements ?? null;
+                }
+                aggregated.push(...data.content.map(mapBackendArtwork));
+                setMuseumLoadProgress({ loaded: aggregated.length, total: totalElements });
+                last = data.last === true;
+                page += 1;
+                if (data.content.length === 0) {
+                    last = true;
+                }
+            }
+            return aggregated;
+        };
+
+        const fetchMuseumAllFallback = async () => {
+            const all = await artworkService.getAll();
+            return Array.isArray(all) ? all.map(mapBackendArtwork) : [];
+        };
+
+        const museumPromise = (async () => {
+            try {
+                return { ok: true, v: await fetchMuseumPaged() };
+            } catch (e) {
+                console.warn('[Gallery] /artworks/paged falló, reintentando con GET /artworks', e);
+                try {
+                    const v = await fetchMuseumAllFallback();
+                    return { ok: true, v };
+                } catch (e2) {
+                    console.warn('[Gallery] GET /artworks falló', e2);
+                    return { ok: false };
+                }
+            }
+        })();
+
+        const excelPromise = excelService.getAll()
+            .then(v => ({ ok: true, v }))
+            .catch(() => ({ ok: false }));
+
+        try {
+            const [museumRes, excelRes] = await Promise.all([museumPromise, excelPromise]);
+
+            let base = [];
+            if (museumRes.ok) {
+                base = museumRes.v;
+            } else if (USE_DEMO_FALLBACK) {
+                base = getEnrichedArtworks();
+                if (process.env.NODE_ENV === 'development') {
+                    console.info('[MUUA] API del museo no disponible — mostrando datos de demostración.');
+                } else {
+                    setCollectionNotice('Colección de demostración: el API no respondió.');
+                }
+            } else {
+                setCollectionError('Sin conexión al API del museo. Activa REACT_APP_USE_DEMO_FALLBACK=true en el build o configura el backend.');
+            }
 
             const excelArtworks =
-                excelResult.status === 'fulfilled' && Array.isArray(excelResult.value)
-                    ? excelResult.value.map(mapInventarioArtwork)
-                    : [];
+                excelRes.ok && Array.isArray(excelRes.v) ? excelRes.v.map(mapInventarioArtwork) : [];
 
-            if (excelResult.status === 'fulfilled' && Array.isArray(excelResult.value)) {
-                setInventario(excelResult.value);
+            if (excelRes.ok && Array.isArray(excelRes.v)) {
+                setInventario(excelRes.v);
             }
 
             setLocalArtworks([...base, ...excelArtworks]);
-        } catch {
-            setLocalArtworks(getEnrichedArtworks());
         } finally {
+            setMuseumLoadProgress(null);
             setArtworksLoaded(true);
         }
     }, []);
@@ -167,29 +227,25 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
         loadLocalArtworks();
     }, [loadLocalArtworks]);
 
-    // Expone función para que Navbar pueda notificar nueva obra subida
     const handleUploaded = useCallback((newArtwork) => {
         setLocalArtworks(prev => [mapBackendArtwork(newArtwork), ...prev]);
         setView('artworks');
     }, []);
 
-    // Expone handleUploaded para App.js → Navbar
     useEffect(() => {
         if (_onUploaded) _onUploaded(handleUploaded);
     }, [_onUploaded, handleUploaded]);
 
-    // Expone refresh de inventario Excel para App.js → Navbar
     const handleExcelUploaded = useCallback(() => {
         setView('inventario');
         loadInventario();
-        loadLocalArtworks(); // refresca también la pestaña Obras
+        loadLocalArtworks();
     }, [loadInventario, loadLocalArtworks]);
 
     useEffect(() => {
         if (_onExcelUploaded) _onExcelUploaded(handleExcelUploaded);
     }, [_onExcelUploaded, handleExcelUploaded]);
 
-    // Art Institute
     const loadArticArtworks = useCallback(async (page) => {
         setLoading(true);
         setArticError(null);
@@ -219,7 +275,6 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
         image: item.imageUrl || null,
     });
 
-    // Filtrado local
     useEffect(() => {
         if (view === 'artic' || !artworksLoaded) return;
         setLoading(true);
@@ -253,7 +308,7 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
             }
             if (artistId && a.artistId !== artistId) return false;
             if (filters.technique?.length && !filters.technique.includes(a.technique)) return false;
-            if (filters.year?.length && !filters.year.includes(a.year)) return false;
+            if (filters.year?.length && !filters.year.some(y => String(y) === String(a.year))) return false;
             return true;
         });
 
@@ -312,7 +367,6 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
         ));
     }, []);
 
-    // Redirigir fuera del inventario si el usuario cierra sesión
     useEffect(() => {
         if (!isLoggedIn && view === 'inventario') setView('artworks');
     }, [isLoggedIn, view]);
@@ -320,37 +374,116 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
     const artworksTotalPages = Math.ceil(filteredData.length / ARTWORKS_PER_PAGE);
     const pagedArtworks = filteredData.slice((artworksPage - 1) * ARTWORKS_PER_PAGE, artworksPage * ARTWORKS_PER_PAGE);
 
+    const scrollToCollection = () => {
+        document.getElementById('coleccion')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    const clearSearchAndFilters = () => {
+        setSearchQuery('');
+        setFilters({});
+    };
+
     return (
         <div className="gallery-container">
-            <div className="gallery-header">
-                <h1>Colección de artes visuales</h1>
-                <p>Museo de la Universidad de Antioquia</p>
-            </div>
+            <header className="gallery-header" role="banner">
+                <div className="gallery-header__overlay" aria-hidden />
+                <div className="gallery-header__inner">
+                    <span className="gallery-header__badge">Museo Universidad de Antioquia</span>
+                    <h1 className="gallery-header__title">Colección de artes visuales</h1>
+                    <p className="gallery-header__lead">
+                        Explora obras y artistas, filtra por técnica y procedencia y descubre piezas locales e internacionales — todo en una sola experiencia.
+                    </p>
+                    <button type="button" className="gallery-header__cta" onClick={scrollToCollection}>
+                        Explorar colección
+                    </button>
+                </div>
+            </header>
 
-            <div className="gallery-controls">
+            <section id="coleccion" className="gallery-controls" aria-labelledby="gallery-main-heading">
+                <h2 id="gallery-main-heading" className="visually-hidden">
+                    Búsqueda y vistas de la colección
+                </h2>
                 <SearchBar
                     onSearch={setSearchQuery}
-                    placeholder={view === 'artists' ? 'Buscar artistas...' : 'Buscar obras...'}
+                    placeholder={view === 'artists' ? 'Buscar artistas por nombre o región...' : 'Buscar por título, artista o técnica...'}
                 />
-                <div className="view-switcher">
-                    <button className={`view-btn ${view === 'artworks' ? 'active' : ''}`} onClick={() => handleViewChange('artworks')}>
-                        Obras ({localArtworks.length})
+                <div className="view-switcher" role="tablist" aria-label="Cambiar vista de la galería">
+                    <button
+                        type="button"
+                        role="tab"
+                        aria-selected={view === 'artworks'}
+                        aria-controls="gallery-main-panel"
+                        id="tab-artworks"
+                        className={`view-btn ${view === 'artworks' ? 'active' : ''}`}
+                        onClick={() => handleViewChange('artworks')}
+                    >
+                        <span className="view-btn__label">Obras</span>
+                        <span className="view-btn__count">{localArtworks.length}</span>
                     </button>
-                    <button className={`view-btn ${view === 'artists' ? 'active' : ''}`} onClick={() => handleViewChange('artists')}>
-                        Artistas ({derivedArtists.length})
+                    <button
+                        type="button"
+                        role="tab"
+                        aria-selected={view === 'artists'}
+                        aria-controls="gallery-main-panel"
+                        id="tab-artists"
+                        className={`view-btn ${view === 'artists' ? 'active' : ''}`}
+                        onClick={() => handleViewChange('artists')}
+                    >
+                        <span className="view-btn__label">Artistas</span>
+                        <span className="view-btn__count">{derivedArtists.length}</span>
                     </button>
-                    <button className={`view-btn ${view === 'artic' ? 'active' : ''}`} onClick={() => handleViewChange('artic')}>
+                    <button
+                        type="button"
+                        role="tab"
+                        aria-selected={view === 'artic'}
+                        aria-controls="gallery-main-panel"
+                        id="tab-artic"
+                        className={`view-btn ${view === 'artic' ? 'active' : ''}`}
+                        onClick={() => handleViewChange('artic')}
+                    >
                         Art Institute
                     </button>
                     {isLoggedIn && (
-                        <button className={`view-btn ${view === 'inventario' ? 'active' : ''}`} onClick={() => handleViewChange('inventario')}>
-                            Inventario {inventario.length > 0 ? `(${inventario.length})` : ''}
+                        <button
+                            type="button"
+                            role="tab"
+                            aria-selected={view === 'inventario'}
+                            aria-controls="gallery-main-panel"
+                            id="tab-inventario"
+                            className={`view-btn ${view === 'inventario' ? 'active' : ''}`}
+                            onClick={() => handleViewChange('inventario')}
+                        >
+                            <span className="view-btn__label">Inventario</span>
+                            {inventario.length > 0 && <span className="view-btn__count">{inventario.length}</span>}
                         </button>
                     )}
                 </div>
-            </div>
+            </section>
 
-            <div className="gallery-content">
+            {(collectionError || collectionNotice || museumLoadProgress) && (
+                <div className="gallery-notices gallery-container__notices" role="region" aria-label="Estado de carga de la colección">
+                    {collectionError && (
+                        <p className="gallery-alert gallery-alert--error" role="alert">
+                            {collectionError}
+                        </p>
+                    )}
+                    {collectionNotice && (
+                        <p className="gallery-alert gallery-alert--demo" role="status">
+                            {collectionNotice}
+                        </p>
+                    )}
+                    {museumLoadProgress && (
+                        <p className="gallery-alert gallery-alert--info" aria-live="polite">
+                            Cargando colección del museo…{' '}
+                            {museumLoadProgress.total != null
+                                ? `${museumLoadProgress.loaded.toLocaleString()} / ${museumLoadProgress.total.toLocaleString()}`
+                                : `${museumLoadProgress.loaded.toLocaleString()} obras`}
+                        </p>
+                    )}
+                </div>
+            )}
+
+            <div className="gallery-content" role="main">
                 {view !== 'artic' && view !== 'inventario' && (
                     <div className="gallery-sidebar">
                         <FilterPanel
@@ -363,7 +496,12 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
                     </div>
                 )}
 
-                <div className={`gallery-main ${view === 'artic' || view === 'inventario' ? 'gallery-main--full' : ''}`}>
+                <div
+                    id="gallery-main-panel"
+                    role="tabpanel"
+                    aria-labelledby={`tab-${view === 'inventario' ? 'inventario' : view === 'artic' ? 'artic' : view}`}
+                    className={`gallery-main ${view === 'artic' || view === 'inventario' ? 'gallery-main--full' : ''}`}
+                >
                     {view === 'inventario' ? (
                         <>
                             <div className="artic-header">
@@ -389,9 +527,15 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
                             </div>
 
                             {loading ? (
-                                <div className="loading"><div className="spinner" /><p>Cargando obras...</p></div>
+                                <div className="loading">
+                                    <div className="spinner spinner--lg" aria-hidden />
+                                    <p>Cargando obras del Art Institute…</p>
+                                </div>
                             ) : articError ? (
-                                <div className="empty-state"><p>{articError}</p></div>
+                                <div className="empty-state empty-state--error">
+                                    <p className="empty-state__title">No pudimos cargar esta sección</p>
+                                    <p className="empty-state__hint">{articError}</p>
+                                </div>
                             ) : (
                                 <>
                                     <div className="gallery-grid artworks">
@@ -401,13 +545,13 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
                                     </div>
                                     {articPagination && (
                                         <div className="pagination">
-                                            <button className="pagination-btn" onClick={() => handleArticPageChange(articPage - 1)} disabled={articPage <= 1}>
+                                            <button type="button" className="pagination-btn" onClick={() => handleArticPageChange(articPage - 1)} disabled={articPage <= 1}>
                                                 ← Anterior
                                             </button>
                                             <span className="pagination-info">
                                                 Página {articPagination.currentPage ?? articPage} de {(articPagination.totalPages ?? 0).toLocaleString()}
                                             </span>
-                                            <button className="pagination-btn" onClick={() => handleArticPageChange(articPage + 1)} disabled={articPage >= (articPagination.totalPages ?? Infinity)}>
+                                            <button type="button" className="pagination-btn" onClick={() => handleArticPageChange(articPage + 1)} disabled={articPage >= (articPagination.totalPages ?? Infinity)}>
                                                 Siguiente →
                                             </button>
                                         </div>
@@ -419,21 +563,37 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
                         <>
                             {selectedArtist && (
                                 <div className="artist-detail-header">
-                                    <button className="back-btn" onClick={() => setSelectedArtist(null)}>← Volver</button>
+                                    <button type="button" className="back-btn" onClick={() => setSelectedArtist(null)}>
+                                        ← Volver a artistas
+                                    </button>
                                     <h2>Obras de {derivedArtists.find(a => String(a.id) === String(selectedArtist))?.name}</h2>
                                 </div>
                             )}
 
                             {loading ? (
-                                <div className="loading"><div className="spinner" /><p>Cargando...</p></div>
+                                <div className="loading">
+                                    <div className="spinner spinner--lg" aria-hidden />
+                                    <p>Preparando resultados…</p>
+                                </div>
                             ) : (
                                 <>
                                     <div className="results-info">
-                                        <p>{filteredData.length} resultado{filteredData.length !== 1 ? 's' : ''}</p>
+                                        <span className="results-info__pill" aria-live="polite">
+                                            {filteredData.length} resultado{filteredData.length !== 1 ? 's' : ''}
+                                        </span>
                                     </div>
                                     {filteredData.length === 0 ? (
                                         <div className="empty-state">
-                                            <p>No se encontraron resultados.</p>
+                                            <div className="empty-state__icon" aria-hidden />
+                                            <p className="empty-state__title">Nada coincide con tu búsqueda</p>
+                                            <p className="empty-state__hint">
+                                                Prueba otras palabras o quita algunos filtros para ver más piezas de la colección.
+                                            </p>
+                                            {(searchQuery || Object.values(filters).some(v => (Array.isArray(v) ? v.length > 0 : v))) && (
+                                                <button type="button" className="empty-state__cta" onClick={clearSearchAndFilters}>
+                                                    Limpiar búsqueda y filtros
+                                                </button>
+                                            )}
                                         </div>
                                     ) : (
                                         <>
@@ -460,13 +620,13 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
                                             </div>
                                             {artworksTotalPages > 1 && (
                                                 <div className="pagination">
-                                                    <button className="pagination-btn" onClick={() => { setArtworksPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} disabled={artworksPage <= 1}>
+                                                    <button type="button" className="pagination-btn" onClick={() => { setArtworksPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} disabled={artworksPage <= 1}>
                                                         ← Anterior
                                                     </button>
                                                     <span className="pagination-info">
                                                         Página {artworksPage} de {artworksTotalPages}
                                                     </span>
-                                                    <button className="pagination-btn" onClick={() => { setArtworksPage(p => Math.min(artworksTotalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} disabled={artworksPage >= artworksTotalPages}>
+                                                    <button type="button" className="pagination-btn" onClick={() => { setArtworksPage(p => Math.min(artworksTotalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }} disabled={artworksPage >= artworksTotalPages}>
                                                         Siguiente →
                                                     </button>
                                                 </div>
