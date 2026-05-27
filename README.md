@@ -379,7 +379,7 @@ Proyecto Educativo 2026
 
 ## 👥 Autor
 
-Xiomara - Fundamentos de Investigación
+Grupo 3 - Fundamentos de Investigación
 Semestre 2026
 
 ---
@@ -390,23 +390,5 @@ Semestre 2026
 ✅ HU-02: Búsqueda en tiempo real
 ✅ HU-03: Filtros por criterios
 ✅ HU-04: Backend REST API
-
----
-
-## 📞 Soporte
-
-Revisar documentación en orden:
-
-1. **QUICK_START.md** - Problemas de instalación
-2. **SETUP_COMPLETE.md** - Configuración detallada
-3. **Carpeta correspondiente README.md** - Específico del módulo
-
----
-
-## ✨ Siguiente Paso
-
-👉 **Ir a QUICK_START.md para instalación en 5 minutos**
-
----
 
 _Proyecto Completo y Operacional ✅_
