@@ -303,7 +303,7 @@ export const excelService = {
     },
 };
 
-export default {
+const api = {
     artistService,
     artworkService,
     filterService,
@@ -311,3 +311,5 @@ export default {
     authService,
     excelService,
 };
+
+export default api;
