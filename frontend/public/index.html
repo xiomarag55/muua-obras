@@ -8,6 +8,20 @@
     <meta name="description" content="MUUA - Museo de la Universidad de Antioquia" />
     <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/favicon.svg" />
     <title>MUUA - Colección de Arte</title>
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('muua-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+                document.documentElement.style.background = t === 'dark' ? '#0c1210' : '#f4f7f5';
+                document.body && (document.body.style.background = t === 'dark' ? '#0c1210' : '#f4f7f5');
+            } catch (e) { }
+        }());
+    </script>
+    <style>
+        html, body { background: #f4f7f5; }
+        html[data-theme="dark"], html[data-theme="dark"] body { background: #0c1210; }
+    </style>
 </head>
 
 <body>

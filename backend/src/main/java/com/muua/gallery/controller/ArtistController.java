@@ -11,7 +11,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/artists")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080"}, maxAge = 3600)
 public class ArtistController {
 
     private final ArtistService artistService;

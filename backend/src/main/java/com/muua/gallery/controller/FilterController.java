@@ -16,7 +16,6 @@ import java.util.Set;
 @RestController
 @RequestMapping("/filters")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080"}, maxAge = 3600)
 public class FilterController {
 
     private final ArtistService artistService;

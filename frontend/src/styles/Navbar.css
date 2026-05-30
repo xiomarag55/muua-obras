@@ -76,6 +76,23 @@
     box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
 }
 
+.navbar-btn--docs {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.navbar-btn--docs:hover {
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.38);
+}
+
 .navbar-btn--excel {
     background: rgba(255, 255, 255, 0.12);
     color: #fff;
@@ -178,6 +195,18 @@
 
 [data-theme="dark"] .navbar-btn--login:hover {
     background: rgba(255, 255, 255, 0.18);
+}
+
+[data-theme="dark"] .navbar-btn--docs {
+    background: rgba(134, 239, 172, 0.08);
+    color: #bbf7d0;
+    border-color: rgba(134, 239, 172, 0.18);
+}
+
+[data-theme="dark"] .navbar-btn--docs:hover {
+    background: rgba(134, 239, 172, 0.16);
+    border-color: rgba(134, 239, 172, 0.35);
+    color: #d9fae0;
 }
 
 [data-theme="dark"] .navbar-btn--excel {

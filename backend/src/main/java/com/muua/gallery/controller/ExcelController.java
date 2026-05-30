@@ -56,12 +56,7 @@ public class ExcelController {
     public ResponseEntity<List<ArtWorkExcel>> findAll() {
         return ResponseEntity.ok(excelService.findAll());
     }
-
-    @DeleteMapping("delete")
-    public ResponseEntity<String> delete() {
-        String message = excelService.delete();
-        return ResponseEntity.ok(message);
-    }
+    
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteById(@PathVariable Long id) {

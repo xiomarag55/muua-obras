@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiMoon, FiSun, FiSettings } from 'react-icons/fi';
+import { FiMoon, FiSun, FiSettings, FiBookOpen } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import LoginModal from './LoginModal';
@@ -8,7 +8,7 @@ import UploadExcelModal from './UploadExcelModal';
 import SettingsModal from './SettingsModal';
 import '../styles/Navbar.css';
 
-export const Navbar = ({ onUploaded, onExcelUploaded }) => {
+export const Navbar = ({ onUploaded, onExcelUploaded, onOpenDocs }) => {
     const { isLoggedIn, user, logout } = useAuth();
     const { darkMode, toggleDarkMode } = useTheme();
     const [showLogin, setShowLogin] = useState(false);
@@ -25,6 +25,15 @@ export const Navbar = ({ onUploaded, onExcelUploaded }) => {
                 </div>
 
                 <div className="navbar-actions">
+                    <button
+                        type="button"
+                        className="navbar-btn navbar-btn--docs"
+                        onClick={onOpenDocs}
+                        aria-label="Documentación"
+                        title="Documentación"
+                    >
+                        <FiBookOpen aria-hidden /> Docs
+                    </button>
                     {isLoggedIn ? (
                         <>
                             <button type="button" className="navbar-btn navbar-btn--excel" onClick={() => setShowExcel(true)}>

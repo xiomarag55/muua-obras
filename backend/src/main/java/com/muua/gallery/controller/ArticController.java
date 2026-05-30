@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/artworks/artic")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:8080"}, maxAge = 3600)
 public class ArticController {
 
     private final ArticApiService articApiService;

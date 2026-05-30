@@ -77,23 +77,26 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
 
     const [dynamicFilters, setDynamicFilters] = useState(demoFilterOptions);
 
-    useEffect(() => {
-        filterService.getFilterOptions()
-            .then(data => {
-                if (data) {
-                    setDynamicFilters({
-                        techniques: (data.techniques?.length ? data.techniques : demoFilterOptions.techniques)
-                            .map(cleanStr)
-                            .filter(Boolean),
-                        regions: (data.regions?.length ? data.regions : demoFilterOptions.regions)
-                            .map(cleanStr)
-                            .filter(Boolean),
-                        years: (data.years?.length ? data.years : demoFilterOptions.years).map(String),
-                    });
-                }
-            })
-            .catch(() => { /* demoFilterOptions */ });
+    const loadFilters = useCallback(async () => {
+        try {
+            const data = await filterService.getFilterOptions();
+            if (data) {
+                setDynamicFilters({
+                    techniques: (data.techniques?.length ? data.techniques : demoFilterOptions.techniques)
+                        .map(cleanStr)
+                        .filter(Boolean),
+                    regions: (data.regions?.length ? data.regions : demoFilterOptions.regions)
+                        .map(cleanStr)
+                        .filter(Boolean),
+                    years: (data.years?.length ? data.years : demoFilterOptions.years).map(String),
+                });
+            }
+        } catch { /* demoFilterOptions */ }
     }, []);
+
+    useEffect(() => {
+        loadFilters();
+    }, [loadFilters]);
 
     useEffect(() => {
         if (!artworksLoaded) return;
@@ -240,7 +243,8 @@ export const Gallery = ({ onUploaded: _onUploaded, onExcelUploaded: _onExcelUplo
         setView('inventario');
         loadInventario();
         loadLocalArtworks();
-    }, [loadInventario, loadLocalArtworks]);
+        loadFilters();
+    }, [loadInventario, loadLocalArtworks, loadFilters]);
 
     useEffect(() => {
         if (_onExcelUploaded) _onExcelUploaded(handleExcelUploaded);
